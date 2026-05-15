@@ -1,34 +1,26 @@
-name: "Install wmux"
-description: "Install wmux on the runner for debug purposes"
+name: "gbraad's Dotfiles wmux app Action"
+description: 'Wrapper for wmux related app command execution on GitHub runners'
 author: "Gerard Braad <me@gbraad.nl>"
 inputs:
-  session:
-    description: "Session to use"
+  as_user:
+    description: 'User to run the commands as (optional)'
     required: false
-    default: screen
-  username:
-    description: "User to own the service"
-    required: false
-    default: ${{ runner.user }}
+    default: ""
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - name: Install wmux
-      run: |
-        ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
-        curl -fsSL "https://github.com/gbraad-dotfiles/wmux/releases/latest/download/wmux-${ARCH}" \
-          | sudo install -m 0755 /dev/stdin /usr/local/bin/wmux
-      shell: bash
-    - name: Install wmux.service
-      run: |
-        SERVICE_URL="https://raw.githubusercontent.com/gbraad-dotfiles/services/main/system/wmux.service"
-        USERNAME="${{ inputs.username }}"
-        GROUPNAME="${USERNAME}"
-        SESSIONNAME="${{ inputs.session }}"
-        curl -fsSL "$SERVICE_URL" \
-          | sed "s/{{USER}}/${USERNAME}/g; s/{{GROUP}}/${GROUPNAME}/g; s/{{SESSION}}/${SESSIONNAME/g" \
-          | sudo tee /etc/systemd/system/wmux.service > /dev/null
-        sudo systemctl daemon-reload
-        sudo systemctl enable wmux.service
-      shell: bash
-      
+    - name: Execute wmux app command
+      uses: gbraad-actions/zsh-action@main
+      with:
+        as_user: ${{ inputs.as_user }}
+        run: |
+          # Check if app function exists
+          if ! type app >/dev/null 2>&1; then
+            echo "Error: app function is not defined. Please make sure to run install first"
+            exit 1
+          fi
+          
+          # Execute wmux app command
+          app wmux install
+          app wmux service install
+          app wmux service start
