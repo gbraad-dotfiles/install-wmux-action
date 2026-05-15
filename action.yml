@@ -6,6 +6,10 @@ inputs:
     description: "Session to use"
     required: false
     default: screen
+  username:
+    description: "User to own the service"
+    required: false
+    default: ${{ runner.user }}
 runs:
   using: "composite"
   steps:
@@ -15,3 +19,16 @@ runs:
         curl -fsSL "https://github.com/gbraad-dotfiles/wmux/releases/latest/download/wmux-${ARCH}" \
           | sudo install -m 0755 /dev/stdin /usr/local/bin/wmux
       shell: bash
+    - name: Install wmux.service
+      run: |
+        SERVICE_URL="https://raw.githubusercontent.com/gbraad-dotfiles/services/main/system/wmux.service"
+        USERNAME="${{ inputs.username }}"
+        GROUPNAME="${USERNAME}"
+        SESSIONNAME="${{ inputs.session }}"
+        curl -fsSL "$SERVICE_URL" \
+          | sed "s/{{USER}}/${USERNAME}/g; s/{{GROUP}}/${GROUPNAME}/g; s/{{SESSION}}/${SESSIONNAME/g" \
+          | sudo tee /etc/systemd/system/wmux.service > /dev/null
+        sudo systemctl daemon-reload
+        sudo systemctl enable wmux.service
+      shell: bash
+      
