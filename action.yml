@@ -1,0 +1,17 @@
+name: "Install wmux"
+description: "Install wmux on the runner for debug purposes"
+author: "Gerard Braad <me@gbraad.nl>"
+inputs:
+  session:
+    description: "Session to use"
+    required: false
+    default: screen
+runs:
+  using: "composite"
+  steps:
+    - name: Install wmux
+      run: |
+        ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+        curl -fsSL "https://github.com/gbraad-dotfiles/wmux/releases/latest/download/wmux-${ARCH}" \
+          | sudo install -m 0755 /dev/stdin /usr/local/bin/wmux
+      shell: bash
